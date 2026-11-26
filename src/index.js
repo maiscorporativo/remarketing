@@ -209,7 +209,8 @@ const mudarFiltro = (f) => serial(async () => {
 /** Envios automáticos (a cada ciclo). Valor inicial vem de DRY_RUN no .env; depois manda o painel. */
 const automatico = () => !PREVIA_FORCADA && getState('enviosAutomaticos', !config.dryRun);
 const podeEnviar = () => !PREVIA_FORCADA && checkConfig({ needSenders: true }).length === 0;
-let envio = null; // lote manual em andamento: { total, feitos, ok, falhas, inicio, fim, erros }
+// lote manual: { total, feitos, ok, falhas, inicio, fim, erros } — o último concluído fica salvo no banco (sobrevive a reinícios e à mudança de servidor)
+let envio = getState('ultimoLote', null);
 
 let ultimoCicloEm = 0;
 const cicloRegistrado = () => serial(async () => { await ciclo(); ultimoCicloEm = Date.now(); });
@@ -252,6 +253,7 @@ const controles = {
     }).catch((e) => { atual.erros.push(e.message); log('erro no lote manual:', e.message); })
       .finally(() => {
         atual.fim = now();
+        setState('ultimoLote', atual);
         log(`■ lote manual concluído: ${atual.ok} enviado(s), ${atual.falhas} falha(s)`);
         registrar({ nivel: atual.falhas || atual.erros.length ? 'aviso' : 'ok', servico: 'painel', acao: `${tipo} concluído`,
           mensagem: `${atual.ok} enviado(s), ${atual.falhas} falha(s)${atual.total === 0 ? ' — ninguém pronto na fila' : ''}`, origem: 'manual', lote });
