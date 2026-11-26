@@ -1,11 +1,26 @@
 import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, existsSync, renameSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-const dir = process.env.DATA_DIR || path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'data');
-mkdirSync(dir, { recursive: true });
-export const db = new DatabaseSync(path.join(dir, 'remarketing.db'));
+export const APP_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+export const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(APP_DIR, 'data'));
+export const DB_FILE = path.join(DATA_DIR, 'remarketing.db');
+export const DB_IMPORTAR = DB_FILE + '.importar';
+mkdirSync(DATA_DIR, { recursive: true });
+
+// banco enviado pelo painel ("Importar banco de dados") é aplicado aqui, na subida, antes de abrir o banco
+export let importacaoAplicada = null;
+if (existsSync(DB_IMPORTAR)) {
+  const backup = existsSync(DB_FILE) ? `${DB_FILE}.antes-da-importacao-${new Date().toISOString().replace(/[:.]/g, '-')}` : null;
+  if (backup) renameSync(DB_FILE, backup);
+  for (const s of ['-wal', '-shm']) rmSync(DB_FILE + s, { force: true });
+  renameSync(DB_IMPORTAR, DB_FILE);
+  importacaoAplicada = { em: new Date().toISOString(), backup };
+  console.log('[db] banco importado aplicado', backup ? `(anterior guardado em ${backup})` : '');
+}
+
+export const db = new DatabaseSync(DB_FILE);
 db.exec(`
   PRAGMA journal_mode = WAL;
   CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT);

@@ -208,6 +208,19 @@
     <button class="btn more" id="rel-more" hidden>Mostrar mais</button>
   </section>
 
+  <section class="card" id="sistema" style="margin-top:16px" aria-labelledby="sis-h">
+    <div class="hd"><div><h2 id="sis-h">Sistema e dados</h2><p>Onde as informações ficam guardadas e importação de dados de outra instalação</p></div></div>
+    <div class="bd">
+      <div id="sis-info" class="muted" style="font-size:13px"></div>
+      <div class="env-row" style="margin-top:12px">
+        <label for="sis-arq" class="muted">Importar banco de dados (remarketing.db)</label>
+        <input type="file" id="sis-arq" accept=".db">
+        <button class="btn" id="sis-btn" disabled>Enviar arquivo</button>
+      </div>
+      <div id="sis-msg" style="margin-top:8px;font-size:13px" role="status"></div>
+    </div>
+  </section>
+
   <footer id="foot"></footer>
 </div>
 
@@ -234,6 +247,7 @@ let data, filtro = 'todos', busca = '', limite = 50;
 function render() {
   const t = data.totais;
   renderEnvios();
+  renderSistema();
   const uc = data.ultimoCiclo;
   document.getElementById('ciclo').textContent = uc ? `Última verificação: ${dt(uc.em)}` : 'Aguardando a primeira verificação';
 
@@ -393,6 +407,32 @@ async function load() {
 }
 // ---------------------------------------------------------------- envios
 const api = (p) => location.origin + location.pathname.replace(/[^/]*$/, '') + p;
+
+// ---------------------------------------------------------------- sistema e dados
+function renderSistema() {
+  const s = data.sistema; if (!s) return;
+  let h = `Banco de dados: <code>${esc(s.banco)}</code>`;
+  if (s.bancoDentroDoApp) h += `<div class="err" style="max-width:none;margin-top:6px">⚠ O banco está dentro da pasta do aplicativo${s.dataDirDefinido ? '' : ' (a variável DATA_DIR não foi definida)'}: na hospedagem, ele seria apagado a cada nova publicação. Defina DATA_DIR para uma pasta fora do app.</div>`;
+  else h += `<div style="color:var(--good-text);margin-top:6px">✓ Guardado fora da pasta do aplicativo: as publicações não apagam os dados.</div>`;
+  if (s.importacaoAplicada) h += `<div style="color:var(--good-text);margin-top:6px">✓ Banco importado aplicado em ${dt(s.importacaoAplicada.em)}${s.importacaoAplicada.backup ? ' (o anterior foi guardado como cópia)' : ''}.</div>`;
+  if (s.importacaoPendente) h += `<div style="color:var(--serious);margin-top:6px;font-weight:600">⏳ Há um banco importado aguardando: reinicie o aplicativo no hPanel para aplicar.</div>`;
+  document.getElementById('sis-info').innerHTML = h;
+}
+document.getElementById('sis-arq').addEventListener('change', (ev) => { document.getElementById('sis-btn').disabled = !ev.target.files.length; });
+document.getElementById('sis-btn').addEventListener('click', async (ev) => {
+  const arq = document.getElementById('sis-arq').files[0]; if (!arq) return;
+  if (!confirm(`Importar "${arq.name}"?\n\nOs dados atuais deste painel serão SUBSTITUÍDOS pelos do arquivo quando o aplicativo for reiniciado (os atuais ficam guardados como cópia de segurança).`)) return;
+  const msg = document.getElementById('sis-msg'); ev.target.disabled = true; msg.textContent = 'Enviando e conferindo o arquivo…';
+  try {
+    const r = await fetch(api('api/importar-banco'), { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/octet-stream' }, body: arq });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.erro || r.status);
+    const x = j.resumo;
+    msg.innerHTML = `<span style="color:var(--good-text);font-weight:600">✓ Arquivo válido e recebido:</span> ${x.contatos} contatos, ${x.enviados} WhatsApp enviados, ${x.falhas} falhas, ${x.eventos} atividades no relatório.<br><b>Agora reinicie o aplicativo no hPanel</b> para aplicar. Depois, recarregue esta página.`;
+    load();
+  } catch (e) { msg.innerHTML = `<span class="err" style="max-width:none">Não foi possível importar: ${esc(e.message)}</span>`; }
+  finally { ev.target.disabled = false; }
+});
 
 // ---------------------------------------------------------------- relatório de atividades
 const SRV = { whatsapp: 'WhatsApp', botconversa: 'Botconversa', crm: 'CRM', mautic: 'Mautic', painel: 'Painel', sistema: 'Sistema' };

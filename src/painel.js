@@ -13,10 +13,12 @@
  */
 import http from 'node:http';
 import crypto from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, rmSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { db, getState } from './db.js';
+import { db, getState, APP_DIR, DATA_DIR, DB_FILE, DB_IMPORTAR, importacaoAplicada } from './db.js';
+import { existsSync } from 'node:fs';
 import { config } from './config.js';
 import { getFiltro, entraPelaData, validarFiltro } from './filtro.js';
 import { consultar, NOME_SERVICO } from './eventos.js';
@@ -62,6 +64,14 @@ function status(ctrl) {
     config: { delayMin: config.delayMin, intervaloMin: config.intervaloMin, maxPorCiclo: config.maxPorCiclo, formIds: config.formIds, fluxo: config.botconversa.flowId },
     ultimoCiclo: getState('ultimoCiclo'),
     totais, porDia, emails, contatos, filtro,
+    sistema: {
+      banco: DB_FILE,
+      // banco dentro da pasta do app = apagado a cada deploy na hospedagem
+      bancoDentroDoApp: DB_FILE.startsWith(APP_DIR + path.sep),
+      dataDirDefinido: !!process.env.DATA_DIR,
+      importacaoPendente: existsSync(DB_IMPORTAR),
+      importacaoAplicada,
+    },
   };
 }
 const NO_FILTRO = `lead_id IN (SELECT c.lead_id FROM clicks c JOIN emails e ON e.id = c.email_id WHERE e.alvo = 1)`;
@@ -172,6 +182,32 @@ export function startPainel(ctrl) {
     }
     try {
       if (url.pathname === '/login') { res.writeHead(303, { location: '/' }); return res.end(); }
+      // "Importar banco de dados": recebe o arquivo .db, confere e deixa pronto para aplicar no próximo reinício
+      if (req.method === 'POST' && url.pathname === '/api/importar-banco') {
+        const origin = req.headers.origin;
+        if (origin && new URL(origin).host !== req.headers.host) return json(res, 403, { erro: 'origem não permitida' });
+        const partes = []; let tam = 0;
+        for await (const ch of req) { tam += ch.length; if (tam > 50 * 1024 * 1024) return json(res, 413, { erro: 'arquivo grande demais (máx. 50 MB)' }); partes.push(ch); }
+        const buf = Buffer.concat(partes);
+        if (buf.subarray(0, 16).toString('latin1') !== 'SQLite format 3\0') return json(res, 400, { erro: 'o arquivo não é um banco de dados do sistema (remarketing.db)' });
+        const tmp = DB_IMPORTAR + '.conferindo';
+        writeFileSync(tmp, buf);
+        try {
+          const t = new DatabaseSync(tmp, { readOnly: true });
+          const tabelas = new Set(t.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((r) => r.name));
+          for (const nome of ['contatos', 'emails', 'clicks', 'state']) if (!tabelas.has(nome)) throw new Error(`o arquivo não tem a tabela "${nome}" — não é um banco deste sistema`);
+          const n = (sql) => t.prepare(sql).get().n;
+          const resumo = {
+            contatos: n('SELECT COUNT(*) n FROM contatos'),
+            enviados: n("SELECT COUNT(*) n FROM contatos WHERE status = 'enviado'"),
+            falhas: n("SELECT COUNT(*) n FROM contatos WHERE status = 'erro'"),
+            eventos: tabelas.has('eventos') ? n('SELECT COUNT(*) n FROM eventos') : 0,
+          };
+          t.close();
+          renameSync(tmp, DB_IMPORTAR);
+          return json(res, 200, { ok: true, resumo });
+        } catch (e) { rmSync(tmp, { force: true }); return json(res, 400, { erro: e.message }); }
+      }
       if (req.method === 'POST' && url.pathname.startsWith('/api/')) {
         // ações só a partir do próprio painel (bloqueia pedidos vindos de outros sites)
         const origin = req.headers.origin;
