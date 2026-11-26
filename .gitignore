@@ -1,0 +1,17 @@
+# segredos e dados — nunca no repositório
+.env
+.env.*
+!.env.example
+data/
+deploy/
+*.db
+*.db-wal
+*.db-shm
+
+# fluxos exportados do n8n trazem chaves de API em texto aberto
+*.json
+!package.json
+!package-lock.json
+
+node_modules/
+*.log

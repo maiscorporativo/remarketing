@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remarketing ABRADILAN</title>
+<style>
+  :root {
+    --page: #f6f7f9; --surface: #ffffff; --surface-2: #f1f3f6; --border: #e3e6eb;
+    --text: #191919; --text-2: #5f6670; --text-3: #8a9099;
+    --accent: #257de0;
+    --funnel-1: #84b9f3; --funnel-2: #519ced; --funnel-3: #2370cd; --funnel-4: #1757ac;
+    --good: #0aac23; --good-text: #006c10; --warning: #fbb315; --serious: #f18a59; --critical: #dc3c3d; --neutral: #9aa1ab;
+    --shadow: 0 1px 2px rgba(16,24,40,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page: #0b0b0b; --surface: #191919; --surface-2: #222; --border: #2e2e2e;
+      --text: #efefef; --text-2: #a7a7a7; --text-3: #7d7d7d;
+      --accent: #338ced;
+      --funnel-1: #1757ac; --funnel-2: #2370cd; --funnel-3: #338ced; --funnel-4: #6aabf1;
+      --good-text: #3fd357; --neutral: #6f6f6f; --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  .grid2 > *, .tiles > * { min-width: 0; }
+  body { margin: 0; background: var(--page); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+  .sub { color: var(--text-2); margin: 0; }
+  .meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--text-2); font-size: 13px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-weight: 600; font-size: 12px; color: var(--text); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; font-size: 13px; text-decoration: none; cursor: pointer; }
+  .btn:hover { background: var(--surface-2); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .tile { padding: 16px; }
+  .tile .lbl { color: var(--text-2); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .tile .val { font-size: 30px; font-weight: 700; letter-spacing: -.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .tile .note { color: var(--text-3); font-size: 12px; margin-top: 2px; }
+  .tile.hero .val { color: var(--good-text); }
+  .grid2 { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+  .card h2 { font-size: 15px; margin: 0; }
+  .card .hd { padding: 16px 16px 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .card .hd p { margin: 2px 0 0; color: var(--text-2); font-size: 12.5px; }
+  .card .bd { padding: 16px; }
+  /* funil */
+  .fn-row { display: grid; grid-template-columns: 130px 1fr 150px; gap: 12px; align-items: center; margin-bottom: 12px; }
+  .fn-row:last-child { margin-bottom: 0; }
+  .fn-lbl { font-size: 13px; color: var(--text-2); }
+  .fn-track { height: 28px; }
+  .fn-bar { height: 100%; border-radius: 0 4px 4px 0; min-width: 2px; transition: width .4s; }
+  .fn-val { font-weight: 600; font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; color: var(--text); }
+  .fn-val span { color: var(--text-3); font-weight: 500; }
+  @media (max-width: 520px) { .fn-row { grid-template-columns: 1fr auto; gap: 4px 12px; } .fn-track { grid-column: 1 / -1; order: 3; } }
+  /* gráfico por dia */
+  #chart { position: relative; }
+  #chart svg { display: block; width: 100%; height: 200px; overflow: visible; }
+  .tip { position: absolute; pointer-events: none; background: var(--text); color: var(--surface); padding: 6px 9px; border-radius: 6px; font-size: 12px; white-space: nowrap; transform: translate(-50%, -100%); margin-top: -8px; opacity: 0; transition: opacity .1s; }
+  .empty { color: var(--text-3); text-align: center; padding: 48px 0; font-size: 13px; }
+  /* tabelas */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 600; color: var(--text-2); font-size: 12px; padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--text-3); font-size: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12.5px; }
+  .ico { width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; flex: none; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px 0; }
+  .fbtn { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); border-radius: 999px; padding: 5px 11px; font: inherit; font-size: 12.5px; cursor: pointer; }
+  .fbtn[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); }
+  .search { margin-left: auto; min-width: 220px; flex: 1 1 220px; max-width: 320px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+  .more { display: block; margin: 12px auto 16px; }
+  .err { color: var(--critical); font-size: 12px; max-width: 360px; }
+  footer { color: var(--text-3); font-size: 12px; margin-top: 16px; text-align: center; }
+  /* relatório */
+  .rel-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 12px 16px 0; }
+  .rs { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--surface); cursor: pointer; text-align: left; font: inherit; color: var(--text); }
+  .rs[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .rs b { display: block; font-size: 13px; margin-bottom: 4px; }
+  .rs span { font-size: 12px; color: var(--text-2); display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; font-variant-numeric: tabular-nums; }
+  .det { color: var(--text-3); font-size: 11.5px; margin-top: 2px; word-break: break-word; }
+  .srv { font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+  /* envios */
+  .envios { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 16px; }
+  .env-col { padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .env-col h2 { font-size: 15px; margin: 0; }
+  .env-col + .env-col { border-left: 1px solid var(--border); }
+  @media (max-width: 760px) { .envios { grid-template-columns: 1fr; } .env-col + .env-col { border-left: 0; border-top: 1px solid var(--border); } }
+  .env-row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+  .env-col p { margin: 0; }
+  select { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); background: var(--accent); }
+  .btn.danger { color: var(--critical); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .3s; }
+  dialog { border: 1px solid var(--border); border-radius: 12px; padding: 20px; width: min(640px, calc(100vw - 32px)); background: var(--surface); color: var(--text); }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h2 { font-size: 17px; margin: 0 0 4px; }
+  .dlg-list { max-height: 50vh; overflow: auto; margin: 12px 0; border: 1px solid var(--border); border-radius: 8px; }
+  .dlg-act { display: flex; justify-content: flex-end; gap: 8px; }
+  /* filtro de e-mails */
+  .fx { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin: 12px 16px 0; padding: 12px; border-radius: 10px; background: var(--surface-2); font-size: 13px; }
+  .fx label { color: var(--text-2); }
+  .fx input[type=date] { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+  tr.off td { color: var(--text-3); }
+  .sw { position: relative; display: inline-block; width: 36px; height: 20px; flex: none; }
+  .sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .sw span { position: absolute; inset: 0; border-radius: 999px; background: var(--neutral); cursor: pointer; transition: background .15s; }
+  .sw span::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .sw input:checked + span { background: var(--good); }
+  .sw input:checked + span::after { transform: translateX(16px); }
+  .sw input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sw input:disabled + span { opacity: .5; cursor: wait; }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-2); margin-left: 6px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Remarketing ABRADILAN · Hospedagem 2027</h1>
+      <p class="sub">Quem clicou nos e-mails [ABRADILAN], visitou o site e não escolheu o pacote recebe WhatsApp e entra no funil do CRM.</p>
+    </div>
+    <div class="meta">
+      <span id="ciclo"></span>
+      <a class="btn" href="contatos.csv">⬇ Exportar planilha</a>
+      <a class="btn" href="sair">Sair</a>
+    </div>
+  </header>
+
+  <section class="card envios" id="envios" aria-labelledby="env-h">
+    <div class="env-col">
+      <h2 id="env-h">Envios automáticos</h2>
+      <div class="env-row"><span class="badge" id="auto-badge"><span class="dot"></span><span>…</span></span><button class="btn" id="auto-btn"></button></div>
+      <p class="muted" id="auto-txt"></p>
+    </div>
+    <div class="env-col">
+      <h2>Enviar agora</h2>
+      <div class="env-row">
+        <label for="qtd" class="muted">Quantidade</label>
+        <select id="qtd"><option value="5">5 contatos</option><option value="10">10 contatos</option><option value="30">30 contatos</option><option value="0">Toda a fila</option></select>
+        <button class="btn primary" id="rev-btn">Revisar e enviar</button>
+      </div>
+      <p class="muted" id="env-txt"></p>
+    </div>
+  </section>
+
+  <dialog id="dlg" aria-labelledby="dlg-h">
+    <h2 id="dlg-h">Confirmar envio</h2>
+    <p class="muted" id="dlg-sub"></p>
+    <div class="tbl-wrap dlg-list"><table id="dlg-tbl"></table></div>
+    <div class="dlg-act"><button class="btn" id="dlg-no">Cancelar</button><button class="btn primary" id="dlg-ok">Enviar</button></div>
+  </dialog>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="grid2">
+    <div class="card">
+      <div class="hd"><div><h2>Funil do remarketing</h2><p>Do clique no e-mail até a inscrição no site</p></div></div>
+      <div class="bd" id="funil"></div>
+    </div>
+    <div class="card">
+      <div class="hd"><div><h2>WhatsApp enviados por dia</h2><p>Horário de Brasília</p></div></div>
+      <div class="bd"><div id="chart"></div></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom:16px">
+    <div class="hd"><div><h2>E-mails do remarketing</h2><p>Só quem clicou em um e-mail <b>incluído</b> recebe o WhatsApp. Novos e-mails [ABRADILAN] aparecem aqui sozinhos.</p></div></div>
+    <div class="fx">
+      <label for="desde">Incluir automaticamente e-mails disparados a partir de</label>
+      <input type="date" id="desde">
+      <button class="btn" id="aplicar">Aplicar</button>
+      <span class="muted" id="fx-msg" role="status"></span>
+    </div>
+    <div class="bd tbl-wrap" style="padding-top:8px"><table id="emails"></table></div>
+  </section>
+
+  <section class="card">
+    <div class="hd"><div><h2>Contatos</h2><p>Cada pessoa é abordada uma única vez</p></div></div>
+    <div class="filters" id="filters"></div>
+    <div class="tbl-wrap" style="margin-top:8px"><table id="contatos"></table></div>
+    <button class="btn more" id="more" hidden>Mostrar mais</button>
+  </section>
+
+  <section class="card" id="relatorio" style="margin-top:16px" aria-labelledby="rel-h">
+    <div class="hd">
+      <div><h2 id="rel-h">Relatório de atividades</h2><p>Tudo o que o sistema fez, com o serviço envolvido em cada sucesso ou falha</p></div>
+      <a class="btn" id="rel-csv" href="eventos.csv">⬇ Exportar relatório</a>
+    </div>
+    <div class="rel-resumo" id="rel-resumo"></div>
+    <div class="filters">
+      <select id="rel-periodo" aria-label="Período"><option value="hoje">Hoje</option><option value="7d" selected>Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="tudo">Todo o período</option></select>
+      <select id="rel-servico" aria-label="Serviço"><option value="">Todos os serviços</option><option value="whatsapp">WhatsApp</option><option value="botconversa">Botconversa</option><option value="crm">CRM</option><option value="mautic">Mautic</option><option value="painel">Painel</option><option value="sistema">Sistema</option></select>
+      <select id="rel-nivel" aria-label="Resultado"><option value="">Todos os resultados</option><option value="falhas">Só falhas e alertas</option><option value="ok">Só sucessos</option></select>
+      <input class="search" id="rel-q" type="search" placeholder="Buscar contato, telefone ou mensagem">
+    </div>
+    <div class="tbl-wrap" style="margin-top:8px"><table id="rel-tbl"></table></div>
+    <button class="btn more" id="rel-more" hidden>Mostrar mais</button>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const SIT = {
+  convertido:   { label: 'Inscreveu-se após WhatsApp', color: 'var(--good)', icon: '✓' },
+  enviado:      { label: 'WhatsApp enviado', color: 'var(--accent)', icon: '➜' },
+  fila:         { label: 'Na fila', color: 'var(--neutral)', icon: '…' },
+  aguardando:   { label: 'Aguardando prazo', color: 'var(--neutral)', icon: '◷' },
+  inscrito:     { label: 'Já inscrito (não abordado)', color: 'var(--good)', icon: '✓' },
+  sem_whatsapp: { label: 'Sem celular', color: 'var(--serious)', icon: '!' },
+  falhou:       { label: 'Falhou', color: 'var(--critical)', icon: '✕' },
+};
+const ORDER = ['convertido', 'enviado', 'fila', 'aguardando', 'inscrito', 'sem_whatsapp', 'falhou'];
+const nf = new Intl.NumberFormat('pt-BR');
+const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0).toLocaleString('pt-BR') + '%';
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dt = (s) => { if (!s) return ''; const d = new Date(String(s).replace(' ', 'T') + (/Z$/.test(s) ? '' : 'Z')); return d.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); };
+const fone = (t) => { const d = String(t || '').replace(/\D/g, ''); return d.length === 13 ? `(${d.slice(2, 4)}) ${d.slice(4, 9)}-${d.slice(9)}` : t; };
+const chip = (k) => { const s = SIT[k]; return `<span class="chip"><span class="ico" style="background:${s.color}">${s.icon}</span>${s.label}</span>`; };
+
+let data, filtro = 'todos', busca = '', limite = 50;
+
+function render() {
+  const t = data.totais;
+  renderEnvios();
+  const uc = data.ultimoCiclo;
+  document.getElementById('ciclo').textContent = uc ? `Última verificação: ${dt(uc.em)}` : 'Aguardando a primeira verificação';
+
+  const elegiveis = t.clicaram - t.inscritosAntes - t.semWhatsapp;
+  const tiles = [
+    { lbl: 'Clicaram no site', val: t.clicaram, note: `via ${data.emails.filter((e) => e.alvo).length} e-mails incluídos` },
+    { lbl: 'WhatsApp enviados', val: t.enviados, note: `${pct(t.enviados, elegiveis)} dos elegíveis` },
+    { lbl: 'Inscreveram-se após o WhatsApp', val: t.convertidos, note: `${pct(t.convertidos, t.enviados)} de conversão`, hero: true },
+    { lbl: 'Na fila', val: t.naFila + t.aguardandoPrazo, note: t.aguardandoPrazo ? `${t.aguardandoPrazo} aguardando ${data.config.delayMin / 60}h após o clique` : `até ${data.config.maxPorCiclo} a cada ${data.config.intervaloMin} min` },
+    { lbl: 'Já inscritos antes', val: t.inscritosAntes, note: 'não recebem mensagem' },
+    { lbl: 'Sem celular / falhas', val: t.semWhatsapp + t.falhas, note: `${t.semWhatsapp} sem celular · ${t.falhas} falha(s)` },
+  ];
+  document.getElementById('tiles').innerHTML = tiles.map((x) => `
+    <div class="card tile${x.hero ? ' hero' : ''}"><div class="lbl">${x.lbl}</div><div class="val">${nf.format(x.val)}</div><div class="note">${x.note}</div></div>`).join('');
+
+  const etapas = [
+    ['Clicaram no site', t.clicaram, 'var(--funnel-1)'],
+    ['Elegíveis', elegiveis, 'var(--funnel-2)'],
+    ['WhatsApp enviado', t.enviados, 'var(--funnel-3)'],
+    ['Inscreveram-se', t.convertidos, 'var(--funnel-4)'],
+  ];
+  const max = Math.max(1, t.clicaram);
+  document.getElementById('funil').innerHTML = etapas.map(([l, v, c], i) => {
+    const w = (v / max) * 100;
+    return `<div class="fn-row" title="${l}: ${nf.format(v)}"><div class="fn-lbl">${l}</div>
+      <div class="fn-track"><div class="fn-bar" style="width:${w}%;background:${c}"></div></div>
+      <div class="fn-val">${nf.format(v)} ${i ? `<span>· ${pct(v, i === 3 ? t.enviados : t.clicaram)}${i === 3 ? ' dos enviados' : ''}</span>` : ''}</div></div>`;
+  }).join('');
+
+  renderChart();
+
+  renderEmails();
+
+  const cont = {}; for (const c of data.contatos) cont[c.situacao] = (cont[c.situacao] || 0) + 1;
+  const fbtn = (k, l, n) => `<button class="fbtn" data-f="${k}" aria-pressed="${filtro === k}">${l} · ${nf.format(n)}</button>`;
+  const f = document.getElementById('filters');
+  const q = f.querySelector('.search')?.value ?? '';
+  f.innerHTML = fbtn('todos', 'Todos', data.contatos.length) + ORDER.filter((k) => cont[k]).map((k) => fbtn(k, SIT[k].label, cont[k])).join('') +
+    `<input class="search" type="search" placeholder="Buscar nome, empresa ou telefone" value="${esc(q)}">`;
+  renderContatos();
+}
+
+function renderContatos() {
+  const s = busca.toLowerCase();
+  const rows = data.contatos.filter((c) => (filtro === 'todos' || c.situacao === filtro) &&
+    (!s || `${c.nome} ${c.sobrenome} ${c.empresa} ${c.telefone} ${c.email}`.toLowerCase().includes(s)));
+  document.getElementById('contatos').innerHTML = `<thead><tr><th>Contato</th><th>WhatsApp</th><th>Situação</th><th>E-mail clicado</th><th>Clique</th><th>Enviado</th></tr></thead><tbody>` +
+    (rows.length ? rows.slice(0, limite).map((c) => `<tr>
+      <td><div>${esc(`${c.nome} ${c.sobrenome}`.trim() || '—')}</div><div class="muted">${esc(c.empresa)}</div></td>
+      <td style="white-space:nowrap">${esc(fone(c.telefone))}</td>
+      <td>${chip(c.situacao)}${c.situacao === 'falhou' || (c.status === 'erro' && c.ultimo_erro) ? `<div class="err">${esc(c.ultimo_erro)}</div>` : ''}${c.convertido_em ? `<div class="muted">em ${dt(c.convertido_em)}</div>` : ''}</td>
+      <td class="muted" style="max-width:280px">${esc(c.email_origem)}</td>
+      <td class="muted" style="white-space:nowrap">${dt(c.ultimo_clique)}</td>
+      <td class="muted" style="white-space:nowrap">${dt(c.enviado_em)}</td></tr>`).join('')
+      : `<tr><td colspan="6" class="empty">Nenhum contato neste filtro</td></tr>`) + '</tbody>';
+  document.getElementById('more').hidden = rows.length <= limite;
+}
+
+function renderChart() {
+  const el = document.getElementById('chart');
+  const dias = data.porDia;
+  if (!dias.length) { el.innerHTML = `<div class="empty">Nenhum WhatsApp enviado ainda.<br>Use "Enviar agora" ou ative os envios automáticos.</div>`; return; }
+  const W = Math.max(el.clientWidth, 280), H = 200, padL = 28, padB = 22, padT = 8;
+  const max = Math.max(...dias.map((d) => d.enviados));
+  const step = niceStep(max), top = Math.ceil(max / step) * step || 1;
+  const bw = (W - padL) / dias.length, barW = Math.min(36, Math.max(4, bw - 6));
+  const y = (v) => padT + (H - padB - padT) * (1 - v / top);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="WhatsApp enviados por dia">`;
+  for (let v = 0; v <= top; v += step) svg += `<line x1="${padL}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--border)" stroke-width="1"/><text x="${padL - 6}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--text-3)">${v}</text>`;
+  const every = Math.ceil(dias.length / Math.floor((W - padL) / 48));
+  dias.forEach((d, i) => {
+    const x = padL + i * bw + (bw - barW) / 2, h = (H - padB) - y(d.enviados), r = Math.min(4, barW / 2, h);
+    svg += `<path d="M${x},${H - padB} V${y(d.enviados) + r} q0,-${r} ${r},-${r} h${barW - 2 * r} q${r},0 ${r},${r} V${H - padB} Z" fill="var(--accent)"/>`;
+    svg += `<rect class="hit" data-i="${i}" x="${padL + i * bw}" y="${padT}" width="${bw}" height="${H - padB - padT}" fill="transparent"/>`;
+    if (i % every === 0) svg += `<text x="${x + barW / 2}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--text-3)">${d.dia.slice(8, 10)}/${d.dia.slice(5, 7)}</text>`;
+  });
+  el.innerHTML = svg + '</svg><div class="tip"></div>';
+  const tip = el.querySelector('.tip');
+  el.querySelectorAll('.hit').forEach((r) => {
+    r.addEventListener('mouseenter', () => {
+      const d = dias[r.dataset.i], i = Number(r.dataset.i);
+      tip.innerHTML = `<b>${d.dia.split('-').reverse().join('/')}</b> · ${d.enviados} enviado(s) · ${d.convertidos} inscrito(s)`;
+      tip.style.left = ((padL + i * bw + bw / 2) / W) * 100 + '%'; tip.style.top = (y(d.enviados) / H) * 200 + 'px'; tip.style.opacity = 1;
+    });
+    r.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
+  });
+}
+function niceStep(max) { const raw = Math.max(1, max) / 4, p = 10 ** Math.floor(Math.log10(raw)); return [1, 2, 5, 10].map((m) => m * p).find((s) => s >= raw); }
+
+document.getElementById('filters').addEventListener('click', (e) => {
+  const b = e.target.closest('.fbtn'); if (!b) return;
+  filtro = b.dataset.f; limite = 50;
+  document.querySelectorAll('.fbtn').forEach((x) => x.setAttribute('aria-pressed', x.dataset.f === filtro));
+  renderContatos();
+});
+document.getElementById('filters').addEventListener('input', (e) => { if (e.target.classList.contains('search')) { busca = e.target.value; limite = 50; renderContatos(); } });
+document.getElementById('more').addEventListener('click', () => { limite += 100; renderContatos(); });
+
+// ---------------------------------------------------------------- e-mails incluídos
+let salvando = false;
+function renderEmails() {
+  const f = data.filtro;
+  const inp = document.getElementById('desde');
+  if (document.activeElement !== inp && !salvando) inp.value = f.desde || '';
+  const nInc = data.emails.filter((e) => e.alvo).length;
+  document.getElementById('emails').innerHTML = `<thead><tr><th>Incluído</th><th>E-mail</th><th>Disparado em</th><th class="num">Clicaram</th><th class="num">WhatsApp enviado</th><th class="num">Inscreveram-se</th></tr></thead><tbody>` +
+    data.emails.map((e) => {
+      const manual = f.incluir.includes(e.id) ? 'incluído à mão' : f.excluir.includes(e.id) ? 'excluído à mão' : '';
+      return `<tr class="${e.alvo ? '' : 'off'}">
+        <td><label class="sw" title="${e.alvo ? 'Incluído: quem clicou recebe WhatsApp' : 'Fora do remarketing'}"><input type="checkbox" data-id="${e.id}" ${e.alvo ? 'checked' : ''} ${salvando ? 'disabled' : ''} aria-label="Incluir ${esc(e.name)}"><span></span></label></td>
+        <td>${esc(e.name)}${manual ? `<span class="tag">${manual}</span>` : ''}</td>
+        <td class="muted" style="white-space:nowrap">${e.enviado_em ? dt(e.enviado_em).slice(0, 8) : 'ainda não disparado'}</td>
+        <td class="num">${nf.format(e.clicaram)}</td><td class="num">${nf.format(e.abordados)}</td><td class="num">${nf.format(e.convertidos)}</td></tr>`;
+    }).join('') + '</tbody>';
+  if (!salvando) document.getElementById('fx-msg').textContent = `${nInc} de ${data.emails.length} e-mails incluídos`;
+}
+
+async function salvarFiltro(f, msg) {
+  salvando = true; renderEmails();
+  const m = document.getElementById('fx-msg'); m.textContent = 'Atualizando a fila…';
+  document.getElementById('aplicar').disabled = true;
+  try {
+    const r = await fetch(location.origin + location.pathname.replace(/[^/]*$/, '') + 'api/filtro', {
+      method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(f) });
+    if (r.status === 401) { location.href = 'login'; return; }
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).erro || r.status);
+    data = await r.json();
+    salvando = false; render();
+    m.textContent = msg;
+  } catch (e) { salvando = false; renderEmails(); m.textContent = 'Não foi possível salvar: ' + e.message; }
+  finally { document.getElementById('aplicar').disabled = false; }
+}
+
+document.getElementById('aplicar').addEventListener('click', () => {
+  const desde = document.getElementById('desde').value;
+  salvarFiltro({ ...data.filtro, desde }, desde ? `Aplicado: e-mails a partir de ${desde.split('-').reverse().join('/')}` : 'Aplicado: todos os e-mails [ABRADILAN]');
+});
+document.getElementById('emails').addEventListener('change', (ev) => {
+  const cb = ev.target.closest('input[data-id]'); if (!cb) return;
+  const id = Number(cb.dataset.id), e = data.emails.find((x) => x.id === id), f = data.filtro;
+  const incluir = f.incluir.filter((x) => x !== id), excluir = f.excluir.filter((x) => x !== id);
+  // só guarda exceção quando a escolha difere da regra da data
+  if (cb.checked && !e.pelaData) incluir.push(id);
+  if (!cb.checked && e.pelaData) excluir.push(id);
+  salvarFiltro({ desde: f.desde, incluir, excluir }, `${cb.checked ? 'Incluído' : 'Excluído'}: ${e.name}`);
+});
+window.addEventListener('resize', () => data && renderChart());
+
+async function load() {
+  try {
+    const r = await fetch(location.origin + location.pathname.replace(/[^/]*$/, '') + 'api/status', { cache: 'no-store', credentials: 'same-origin' });
+    if (r.status === 401) { location.href = 'login'; return; }
+    data = await r.json(); render();
+    if (!document.getElementById('rel-more').dataset.carregado || !emAndamento()) { document.getElementById('rel-more').dataset.carregado = 1; loadRelatorio(); }
+    document.getElementById('foot').textContent = `Atualizado às ${new Date().toLocaleTimeString('pt-BR')} · atualiza sozinho a cada minuto`;
+  } catch (e) { document.getElementById('foot').textContent = 'Não foi possível atualizar agora. Nova tentativa em 1 minuto.'; }
+}
+// ---------------------------------------------------------------- envios
+const api = (p) => location.origin + location.pathname.replace(/[^/]*$/, '') + p;
+
+// ---------------------------------------------------------------- relatório de atividades
+const SRV = { whatsapp: 'WhatsApp', botconversa: 'Botconversa', crm: 'CRM', mautic: 'Mautic', painel: 'Painel', sistema: 'Sistema' };
+const NIV = {
+  ok:    { label: 'Sucesso', color: 'var(--good)', icon: '✓' },
+  info:  { label: 'Info', color: 'var(--neutral)', icon: 'i' },
+  aviso: { label: 'Atenção', color: 'var(--serious)', icon: '!' },
+  erro:  { label: 'Falha', color: 'var(--critical)', icon: '✕' },
+};
+const nivelChip = (n) => { const s = NIV[n] || NIV.info; return `<span class="chip"><span class="ico" style="background:${s.color}">${s.icon}</span>${s.label}</span>`; };
+let relItens = [], relTotal = 0;
+const relParams = (extra = {}) => new URLSearchParams({
+  periodo: document.getElementById('rel-periodo').value, servico: document.getElementById('rel-servico').value,
+  nivel: document.getElementById('rel-nivel').value, q: document.getElementById('rel-q').value.trim(), ...extra });
+
+async function loadRelatorio(mais = false) {
+  try {
+    const r = await fetch(api('api/eventos?' + relParams({ offset: mais ? relItens.length : 0, limit: 100 })), { credentials: 'same-origin', cache: 'no-store' });
+    if (r.status === 401) { location.href = 'login'; return; }
+    const j = await r.json();
+    relItens = mais ? relItens.concat(j.itens) : j.itens; relTotal = j.total;
+    renderResumo(j.resumo); renderRelatorio();
+    document.getElementById('rel-csv').href = 'eventos.csv?' + relParams();
+  } catch { document.getElementById('rel-tbl').innerHTML = '<tr><td class="empty">Não foi possível carregar o relatório agora.</td></tr>'; }
+}
+function renderResumo(resumo) {
+  const por = {}; for (const r of resumo) { const x = (por[r.servico] ||= { ok: 0, falha: 0, info: 0 }); if (r.nivel === 'ok') x.ok += r.n; else if (r.nivel === 'erro' || r.nivel === 'aviso') x.falha += r.n; else x.info += r.n; }
+  const sel = document.getElementById('rel-servico').value;
+  document.getElementById('rel-resumo').innerHTML = ['whatsapp', 'botconversa', 'crm', 'mautic', 'painel', 'sistema'].filter((s) => por[s] || ['botconversa', 'crm', 'mautic'].includes(s)).map((s) => {
+    const x = por[s] || { ok: 0, falha: 0, info: 0 };
+    return `<button class="rs" data-s="${s}" aria-pressed="${sel === s}"><b>${SRV[s]}</b>
+      <span><span class="ico" style="background:var(--good);width:12px;height:12px;font-size:8px">✓</span>${nf.format(x.ok)}</span>
+      <span><span class="ico" style="background:${x.falha ? 'var(--critical)' : 'var(--neutral)'};width:12px;height:12px;font-size:8px">✕</span>${nf.format(x.falha)} falha(s)</span></button>`;
+  }).join('');
+}
+function renderRelatorio() {
+  document.getElementById('rel-tbl').innerHTML = `<thead><tr><th>Data e hora</th><th>Resultado</th><th>Serviço</th><th>Ação</th><th>Contato</th><th>Detalhes</th></tr></thead><tbody>` +
+    (relItens.length ? relItens.map((e) => `<tr>
+      <td class="muted" style="white-space:nowrap">${dt(e.em)}</td>
+      <td>${nivelChip(e.nivel)}</td>
+      <td class="srv">${SRV[e.servico] || esc(e.servico)}</td>
+      <td>${esc(e.acao)}${e.origem ? `<div class="det">${esc(e.origem)}${e.lote ? ` · lote ${esc(e.lote)}` : ''}</div>` : ''}</td>
+      <td>${e.contato ? `${esc(e.contato)}<div class="det">${esc(fone(e.telefone))}${e.lead_id ? ` · Mautic ${e.lead_id}` : ''}</div>` : '<span class="muted">—</span>'}</td>
+      <td style="max-width:420px">${esc(e.mensagem)}${e.detalhe ? `<div class="det" title="${esc(e.detalhe)}">${esc(e.detalhe.slice(0, 160))}${e.detalhe.length > 160 ? '…' : ''}</div>` : ''}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="empty">Nenhuma atividade com esses filtros</td></tr>') + '</tbody>';
+  document.getElementById('rel-more').hidden = relItens.length >= relTotal;
+}
+['rel-periodo', 'rel-servico', 'rel-nivel'].forEach((id) => document.getElementById(id).addEventListener('change', () => loadRelatorio()));
+let relT; document.getElementById('rel-q').addEventListener('input', () => { clearTimeout(relT); relT = setTimeout(() => loadRelatorio(), 300); });
+document.getElementById('rel-more').addEventListener('click', () => loadRelatorio(true));
+document.getElementById('rel-resumo').addEventListener('click', (ev) => {
+  const b = ev.target.closest('.rs'); if (!b) return;
+  const s = document.getElementById('rel-servico'); s.value = s.value === b.dataset.s ? '' : b.dataset.s; loadRelatorio();
+});
+async function post(p, body) {
+  const r = await fetch(api(p), { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  if (r.status === 401) { location.href = 'login'; throw new Error('login'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.erro || r.status);
+  return j;
+}
+const emAndamento = () => !!(data?.envios?.envio && !data.envios.envio.fim);
+
+function renderEnvios() {
+  const e = data.envios, t = data.totais;
+  const bloqueio = e.previaForcada ? 'Sistema aberto em modo prévia (npm run previa): envios desligados.'
+    : !e.podeEnviar ? 'Envio indisponível: faltam configurações do Botconversa ou do CRM no .env.' : '';
+  // automáticos
+  const b = document.getElementById('auto-badge'), btn = document.getElementById('auto-btn');
+  b.querySelector('.dot').style.background = e.automatico ? 'var(--good)' : 'var(--warning)';
+  b.querySelector('span:last-child').textContent = e.automatico ? 'Ativos' : 'Pausados';
+  btn.textContent = e.automatico ? '⏸ Pausar' : '▶ Ativar envios automáticos';
+  btn.className = e.automatico ? 'btn danger' : 'btn';
+  btn.disabled = !!bloqueio && !e.automatico;
+  document.getElementById('auto-txt').textContent = bloqueio ||
+    (!e.cicloRodando ? 'Atenção: só o painel está aberto (npm run painel). Os envios automáticos só funcionam com npm start.'
+      : e.automatico ? `A cada ${data.config.intervaloMin} min, envia para até ${data.config.maxPorCiclo} contatos da fila, ${data.config.delayMin / 60}h após o clique.`
+      : 'Ninguém recebe mensagem sozinho. Use "Enviar agora" para lotes manuais.');
+  // manual
+  const fila = t.naFila, rev = document.getElementById('rev-btn'), txt = document.getElementById('env-txt');
+  rev.disabled = !!bloqueio || emAndamento() || !fila;
+  document.querySelector('#qtd option[value="0"]').textContent = `Toda a fila (${fila})`;
+  const v = e.envio;
+  if (v) {
+    const pct = v.total ? Math.round((v.feitos / v.total) * 100) : 0;
+    txt.innerHTML = (v.fim
+      ? `Último lote: <b>${v.ok}</b> enviado(s)${v.falhas ? `, <span style="color:var(--critical)">${v.falhas} falha(s)</span>` : ''} · ${dt(v.fim)}`
+      : `Enviando… <b>${v.feitos}</b> de ${v.total}${v.falhas ? ` · ${v.falhas} falha(s)` : ''}<div class="bar" style="margin-top:6px"><i style="width:${pct}%"></i></div>`)
+      + (v.erros?.length ? `<div class="err">${esc(v.erros.slice(-1)[0])}</div>` : '');
+  } else txt.textContent = bloqueio || (fila ? `${fila} contato(s) prontos na fila. Você confere a lista antes de confirmar.` : 'Nenhum contato pronto na fila agora.');
+  // atalho para reenviar só quem falhou
+  const nf2 = t.falhasPendentes || 0;
+  if (nf2 && !bloqueio && !emAndamento()) txt.insertAdjacentHTML('beforeend',
+    `<div style="margin-top:8px"><button class="btn" id="falhas-btn">↻ Tentar de novo só as ${nf2} falha(s)</button></div>`);
+}
+
+document.getElementById('auto-btn').addEventListener('click', async (ev) => {
+  const ativar = !data.envios.automatico;
+  if (ativar && !confirm(`Ativar os envios automáticos?\n\nA cada ${data.config.intervaloMin} minutos o sistema enviará o WhatsApp e criará o negócio no CRM para até ${data.config.maxPorCiclo} contatos da fila, sem pedir confirmação.`)) return;
+  ev.target.disabled = true;
+  try { data = await post('api/automatico', { ativo: ativar }); render(); } catch (e) { alert('Não foi possível: ' + e.message); ev.target.disabled = false; }
+});
+
+const dlg = document.getElementById('dlg');
+let lote = [], loteSoFalhas = false;
+async function revisar(q, soFalhas) {
+  try {
+    const r = await fetch(api('api/proximos?n=' + q + (soFalhas ? '&falhas=1' : '')), { credentials: 'same-origin', cache: 'no-store' });
+    lote = await r.json();
+  } catch { alert('Não foi possível carregar a lista.'); return; }
+  if (!lote.length) { alert(soFalhas ? 'Não há falhas para tentar de novo.' : 'Nenhum contato pronto na fila agora.'); return; }
+  loteSoFalhas = soFalhas;
+  document.getElementById('dlg-h').textContent = soFalhas ? `Tentar de novo para ${lote.length} contato(s) com falha?` : `Enviar para ${lote.length} contato(s)?`;
+  document.getElementById('dlg-sub').textContent = soFalhas
+    ? 'Só estes contatos, que não receberam por falha. Cada um recebe apenas o que faltou. Quem já recebeu não é incluído.'
+    : 'Cada um recebe o fluxo do WhatsApp e entra no funil do CRM. Quem se inscrever no site até o momento do envio é retirado automaticamente.';
+  document.getElementById('dlg-tbl').innerHTML = `<thead><tr><th>Contato</th><th>WhatsApp</th><th>${soFalhas ? 'Falta enviar' : 'Clique'}</th></tr></thead><tbody>` +
+    lote.map((p) => `<tr><td>${esc(p.nome || '—')}<div class="muted">${esc(p.empresa)}</div></td><td style="white-space:nowrap">${esc(fone(p.telefone))}</td>
+      <td class="muted" style="white-space:nowrap">${soFalhas ? `${esc(p.falta)}<div class="err">${esc(p.erro || '')}</div>` : dt(p.ultimo_clique)}</td></tr>`).join('') + '</tbody>';
+  document.getElementById('dlg-ok').textContent = soFalhas ? `Tentar de novo (${lote.length})` : `Enviar para ${lote.length}`;
+  dlg.showModal();
+}
+document.getElementById('rev-btn').addEventListener('click', () => revisar(Number(document.getElementById('qtd').value) || data.totais.naFila, false));
+document.getElementById('env-txt').addEventListener('click', (ev) => { if (ev.target.id === 'falhas-btn') revisar(200, true); });
+document.getElementById('dlg-no').addEventListener('click', () => dlg.close());
+document.getElementById('dlg-ok').addEventListener('click', async (ev) => {
+  ev.target.disabled = true;
+  try { data = await post('api/enviar', { quantidade: lote.length, soFalhas: loteSoFalhas }); dlg.close(); render(); acompanhar(); }
+  catch (e) { alert('Não foi possível enviar: ' + e.message); }
+  finally { ev.target.disabled = false; }
+});
+// enquanto um lote está saindo, atualiza a cada 3 segundos
+let timerLote;
+function acompanhar() { clearTimeout(timerLote); timerLote = setTimeout(async () => { await load(); if (emAndamento()) acompanhar(); }, 3000); }
+
+load().then(() => emAndamento() && acompanhar()); setInterval(load, 60000);
+
+</script>
+</body>
+</html>

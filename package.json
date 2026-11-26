@@ -1,0 +1,20 @@
+{
+  "name": "mautic-remarketing-abradilan",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Quem clicou nos e-mails [ABRADILAN] e não se inscreveu (form 31) recebe fluxo no Botconversa e entra no funil do CRM.",
+  "scripts": {
+    "start": "node server.js",
+    "previa": "node server.js --once --dry-run",
+    "once": "node server.js --once",
+    "painel": "node server.js --painel",
+    "relatorio": "node server.js --report",
+    "botconversa:check": "node server.js --botconversa-check",
+    "exportar-banco": "node scripts/exportar-banco.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "main": "server.js"
+}

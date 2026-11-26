@@ -1,0 +1,15 @@
+Olá, {{nome}}! Tudo bem?
+
+Aqui é da Mais Corporativo, responsável pelas hospedagens da *ABRADILAN Conexão Farma 2027*.
+
+Vimos que você visitou recentemente o nosso site de hospedagens e gostaríamos de ajudar você a garantir a sua acomodação para o evento com tranquilidade.
+
+As tarifas negociadas para os participantes estão sujeitas à disponibilidade dos hotéis, por isso recomendamos reservar com antecedência.
+
+Posso ajudar você a escolher o pacote ideal ou esclarecer alguma dúvida? É só responder esta mensagem.
+
+Se preferir, finalize diretamente pelo site:
+https://abradilan.mais.tur.br
+
+Atenciosamente,
+Equipe Mais Corporativo
