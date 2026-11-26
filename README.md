@@ -66,3 +66,10 @@ No quadro **Envios**, no topo do painel:
 
 Ao iniciar, os envios automáticos começam pausados enquanto `DRY_RUN=1`. Depois disso, vale o que foi escolhido no painel.
 Antes de cada lote, o sistema relê o formulário 31: quem acabou de se inscrever não recebe.
+
+## Relatório de atividades
+
+O painel registra tudo o que o sistema faz: disparos, negócios no CRM, leituras do Mautic, ações feitas no painel e conversões. Cada falha mostra **em qual serviço aconteceu** (WhatsApp, Botconversa, CRM ou Mautic), a etapa e o motivo, por exemplo "sem conexão", "acesso negado — confira a chave" ou "número recusado (sem WhatsApp)".
+
+No painel dá para filtrar por período, serviço e resultado (só falhas, por exemplo), buscar por contato e exportar a planilha em **⬇ Exportar relatório**.
+Falhas de conexão em que o pedido não chegou ao serviço são repetidas sozinhas, até 3 vezes, sem risco de mensagem duplicada.

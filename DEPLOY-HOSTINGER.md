@@ -14,7 +14,7 @@ hPanel → **Sites → Adicionar site → Deploy Web App (Node.js) → GitHub** 
 
 ## 2. Variáveis de ambiente
 
-Cadastre todas no painel do app. Os valores estão no arquivo local `deploy/variaveis-hostinger.txt`, gerado no computador onde o sistema rodava e que nunca vai para o GitHub. As obrigatórias são:
+Cadastre todas no painel do app. Os valores estão no arquivo local `deploy/hostinger.env`, gerado no computador onde o sistema rodava e que nunca vai para o GitHub. Ele pode ser importado direto no painel da Hostinger. As obrigatórias são:
 
 `MAUTIC_URL`, `MAUTIC_USER`, `MAUTIC_PASS`, `BOTCONVERSA_API_KEY`, `BOTCONVERSA_FLOW_ID`, `CRM_WEBHOOK_URL`,
 `PAINEL_USUARIO`, `PAINEL_SENHA`, `DATA_DIR`, `CRON_TOKEN`, `EMAILS_DESDE` e as regras (`DELAY_MINUTOS` etc.).
