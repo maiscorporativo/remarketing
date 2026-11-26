@@ -110,8 +110,8 @@ function eventosCsv(url) {
   const rows = consultar({ ...filtrosEventos(url), limit: 100000 }).itens.map((e) => [br(e.em), NIVEL[e.nivel] || e.nivel, NOME_SERVICO[e.servico] || e.servico, e.acao, e.contato, e.telefone, e.lead_id, e.mensagem, e.detalhe, e.origem, e.lote]);
   return '﻿' + [head, ...rows].map((r) => r.map(csvCell).join(';')).join('\r\n');
 }
-const json = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
-const page = (res, code, html) => { res.writeHead(code, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); res.end(html); };
+const json = (res, code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(obj)); };
+const page = (res, code, html) => { res.writeHead(code, { 'content-type': 'text/html; charset=utf-8' }); res.end(html); };
 const loginHtml = (erro) => `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Remarketing ABRADILAN</title><style>
 :root{--page:#f6f7f9;--surface:#fff;--border:#e3e6eb;--text:#191919;--text-2:#5f6670;--accent:#257de0;--critical:#dc3c3d}
@@ -148,6 +148,11 @@ export function startPainel(ctrl) {
   const tentativas = new Map(); // ip → [falhas, desde]
 
   http.createServer(async (req, res) => {
+    // nada deste painel pode ficar em cache na CDN da hospedagem: a resposta depende de quem está logado
+    // (uma cópia em cache do redirecionamento "/" → "/login" causou ERR_TOO_MANY_REDIRECTS)
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('CDN-Cache-Control', 'no-store');
+    res.setHeader('Vary', 'Cookie');
     const url = new URL(req.url, 'http://x');
     // atrás do proxy da hospedagem, o IP real vem no X-Forwarded-For
     const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
@@ -235,7 +240,7 @@ export function startPainel(ctrl) {
         res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="remarketing-abradilan-${new Date().toISOString().slice(0, 10)}.csv"` });
         return res.end(csv(ctrl));
       }
-      if (url.pathname === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(readFileSync(HTML)); }
+      if (url.pathname === '/') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(readFileSync(HTML)); }
       res.writeHead(404); res.end('Não encontrado');
     } catch (e) { res.writeHead(500); res.end(e.message); }
   }).listen(port, () => console.log(`[painel] http://localhost:${port}  (usuário: ${user})`));
